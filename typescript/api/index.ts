@@ -64,3 +64,5 @@ const PORT = 3000;
 app.listen(PORT, () => {
   console.log(`MCP Stateless Streamable HTTP Server listening on port ${PORT}`);
 });
+
+export default app;
