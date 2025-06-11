@@ -3,6 +3,9 @@ import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 
 import createServer from "./mcp/server";
 
+// Export the analyze function for external use
+export { analyzeBtcMarket, DEFAULT_CONFIG, AnalysisConfig, AnalysisResult } from './mcp/tools/analyze';
+
 const app = express();
 app.use(express.json());
 
