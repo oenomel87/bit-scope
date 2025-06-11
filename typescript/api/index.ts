@@ -36,13 +36,9 @@ app.post('/mcp', async (req: Request, res: Response) => {
 
 app.get('/mcp', (req: Request, res: Response) => {
   console.log('Received GET MCP request');
-  res.writeHead(405).end(JSON.stringify({
+  res.writeHead(200).end(JSON.stringify({
     jsonrpc: "2.0",
-    error: {
-      code: -32000,
-      message: "Method not allowed."
-    },
-    id: null
+    result: "MCP Stateless Streamable HTTP Server is running.",
   }));
 });
 
