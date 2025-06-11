@@ -1,6 +1,7 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { getCurrentTicker, getCandlesForMinutes, getCandlesForDaily, getCandlesForWeekly } from './tools/market';
+import { analyzeBtcMarket } from './tools/analyze';
 
 const createServer = () => {
   const server = new Server(
@@ -19,6 +20,14 @@ const createServer = () => {
   server.setRequestHandler(ListToolsRequestSchema, async () => {
     return {
       tools: [
+        {
+          name: 'analyze_btc_market_ts',
+          description: 'Analyze the Bitcoin market and provide insights',
+          inputSchema: {
+            type: 'object',
+            properties: {},
+          },
+        },
         {
           name: 'get_current_ticker',
           description: 'Get current Bitcoin ticker information from Upbit API',
@@ -86,6 +95,20 @@ const createServer = () => {
     const { name, arguments: args } = request.params;
     
     switch (name) {
+      case 'analyze_btc_market_ts':
+        try {
+          const analysisResult = await analyzeBtcMarket();
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(analysisResult, null, 2),
+              },
+            ],
+          };
+        } catch (error) {
+          throw new Error(`Failed to analyze Bitcoin market: ${error}`);
+        }
       case 'get_current_ticker':
         try {
           const ticker = await getCurrentTicker();

@@ -158,7 +158,7 @@ def calculate_market_info(data: MarketData, config: AnalysisConfig) -> Dict[str,
             "symbol": "BTC-KRW",
             "current_price": ticker.trade_price,
             "day_change_pct": round(ticker.signed_change_rate * 100, 2),
-            "timestamp": datetime.fromtimestamp(ticker.timestamp / 1000).strftime('%Y-%m-%dT%H:%M:%SZ'),
+            "timestamp": datetime.utcfromtimestamp(ticker.timestamp / 1000).strftime('%Y-%m-%dT%H:%M:%SZ'),
             "24h_volume": round(ticker.acc_trade_volume_24h, 2),
             "24h_volume_change_pct": volume_change_pct,
             "volatility_30d_annualized": volatility
@@ -1030,7 +1030,7 @@ def set_tools(mcp):
     """
     mcp.add_tool(
         analyze_btc_mareket,
-        "analyze_btc_mareket",
+        "analyze_btc_mareket_py",
         description="비트코인 시장 정보를 수집하고, \
             추세 분석 및 가격 레벨을 계산하여 종합적인 분석 결과를 반환합니다."
     )

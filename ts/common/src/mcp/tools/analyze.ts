@@ -1204,9 +1204,10 @@ function emptyTechnicalSignals(): TechnicalSignals {
  * @param config 분석 설정 파라미터 (선택사항)
  * @returns 종합 분석 결과
  */
-export async function analyzeBtcMarket(config: AnalysisConfig = DEFAULT_CONFIG): Promise<AnalysisResult> {
+export async function analyzeBtcMarket(): Promise<AnalysisResult> {
   try {
     const startTime = Date.now();
+    const config = DEFAULT_CONFIG
     
     // 1. 데이터 로드 (병렬 처리)
     const marketData = await loadMarketData(config);
