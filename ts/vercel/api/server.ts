@@ -2,7 +2,7 @@ import { createMcpHandler } from "@vercel/mcp-adapter";
 import { z } from "zod";
 
 import { getCurrentTicker, getCandlesForMinutes, getCandlesForDaily, getCandlesForWeekly } from './mcp/tools/market.js'
-import { analyzeBtcMarket, DEFAULT_CONFIG, AnalysisConfig, AnalysisResult } from './mcp/tools/analyze.js';
+import { analyzeBtcMarket, AnalysisResult } from './mcp/tools/analyze.js';
 
 const handler = createMcpHandler((server) => {
   server.tool("echo", { message: z.string() }, async ({ message }) => ({
