@@ -15,8 +15,8 @@ const handler = createMcpHandler((server) => {
     content: [{ type: "text", text: `Now: ${new Date().toISOString()}` }],
   }));
 
-  server.tool("analyze_blockchain_market", "전달 받은 블록체인의 마켓 코드에 대해 다양한 기술적 지표와 시장 분석을 수행하여 종합적인 투자 정보를 제공합니다.", { marketCode: z.string().default('KRW-BTC') }, async () => {
-    const result: AnalysisResult = await analyzeBlockChainMarket();
+  server.tool("analyze_blockchain_market", "전달 받은 블록체인의 마켓 코드에 대해 다양한 기술적 지표와 시장 분석을 수행하여 종합적인 투자 정보를 제공합니다.", { marketCode: z.string().default('KRW-BTC') }, async ({ marketCode }) => {
+    const result: AnalysisResult = await analyzeBlockChainMarket(marketCode);
     return {
       content: [
         { type: "text", text: JSON.stringify(result)}
