@@ -73,6 +73,7 @@ export const DEFAULT_CONFIG: AnalysisConfig = {
 
 // 시장 데이터 컨테이너
 export interface MarketData {
+  marketCode: string;
   dailyData: DailyCandleStick[];
   minuteData: MinuteCandleStick[];
   weeklyData: WeeklyCandleStick[];
@@ -381,7 +382,7 @@ export class TechnicalIndicators {
 }
 
 // 데이터 로드 함수
-export async function loadMarketData(config: AnalysisConfig = DEFAULT_CONFIG): Promise<MarketData> {
+export async function loadMarketData(config: AnalysisConfig = DEFAULT_CONFIG, marketCode: string): Promise<MarketData> {
   console.log('시장 데이터 로드 시작 (병렬 처리)');
   const startTime = Date.now();
   
@@ -402,6 +403,7 @@ export async function loadMarketData(config: AnalysisConfig = DEFAULT_CONFIG): P
   console.log(`데이터 로드 완료: ${loadTime.toFixed(2)}초`);
   
   return {
+    marketCode,
     dailyData,
     minuteData,
     weeklyData,
@@ -421,7 +423,7 @@ export function calculateMarketInfo(data: MarketData, config: AnalysisConfig): M
     const volatility = calculateDailyVolatility(data.dailyData);
     
     return {
-      symbol: 'BTC-KRW',
+      symbol: data.marketCode,
       currentPrice: ticker.trade_price,
       dayChangePct: Math.round(ticker.signed_change_rate * 100 * 100) / 100,
       timestamp: new Date(ticker.timestamp).toISOString(),
@@ -432,7 +434,7 @@ export function calculateMarketInfo(data: MarketData, config: AnalysisConfig): M
   } catch (error) {
     console.error('시장 정보 계산 실패:', error);
     return {
-      symbol: 'BTC-KRW',
+      symbol: data.marketCode,
       currentPrice: 0,
       dayChangePct: 0.0,
       timestamp: new Date().toISOString(),
@@ -1204,13 +1206,13 @@ function emptyTechnicalSignals(): TechnicalSignals {
  * @param config 분석 설정 파라미터 (선택사항)
  * @returns 종합 분석 결과
  */
-export async function analyzeBtcMarket(): Promise<AnalysisResult> {
+export async function analyzeBlockChainMarket(marketCode: string = 'KRW-BTC'): Promise<AnalysisResult> {
   try {
     const startTime = Date.now();
     const config: AnalysisConfig = DEFAULT_CONFIG;
     
     // 1. 데이터 로드 (병렬 처리)
-    const marketData = await loadMarketData(config);
+    const marketData = await loadMarketData(config, marketCode);
     
     console.log(`로드된 데이터: Daily=${marketData.dailyData.length}, Minute=${marketData.minuteData.length}, Weekly=${marketData.weeklyData.length}`);
     

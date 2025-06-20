@@ -10,10 +10,13 @@ import {
 
 /**
  * Get the current ticker of Bitcoin in KRW from Upbit API.
+ * 
+ * @param marketCode 마켓 코드 (기본값: 'KRW-BTC')
+ * @returns 현재 티커 정보
  */
-export async function getCurrentTicker(): Promise<Ticker> {
+export async function getCurrentTicker(marketCode: string = 'KRW-BTC'): Promise<Ticker> {
   try {
-    const response = await fetch('https://api.upbit.com/v1/ticker?markets=KRW-BTC');
+    const response = await fetch(`https://api.upbit.com/v1/ticker?markets=${marketCode}`);
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -37,16 +40,18 @@ export async function getCurrentTicker(): Promise<Ticker> {
  * 
  * @param minutes 캔들 단위(분) (1, 3, 5, 15, 10, 30, 60, 240)
  * @param count 가져올 캔들 개수 (최대 200)
+ * @param marketCode 마켓 코드 (기본값: 'KRW-BTC')
  * @returns 캔들스틱 데이터 리스트
  */
 export async function getCandlesForMinutes(
   minutes: number = 30, 
-  count: number = 10
+  count: number = 10,
+  marketCode: string = 'KRW-BTC'
 ): Promise<MinuteCandleStick[]> {
   try {
     const url = `https://api.upbit.com/v1/candles/minutes/${minutes}`;
     const params = new URLSearchParams({
-      market: 'KRW-BTC',
+      market: marketCode,
       count: Math.min(count, 200).toString() // 최대 200개까지 가능
     });
     
@@ -69,13 +74,14 @@ export async function getCandlesForMinutes(
  * Get daily candlestick data until today.
  * 
  * @param count 가져올 캔들 개수 (최대 200)
+ * @param marketCode 마켓 코드 (기본값: 'KRW-BTC')
  * @returns 캔들스틱 데이터 리스트
  */
-export async function getCandlesForDaily(count: number = 10): Promise<DailyCandleStick[]> {
+export async function getCandlesForDaily(count: number = 10, marketCode: string = 'KRW-BTC'): Promise<DailyCandleStick[]> {
   try {
     const url = 'https://api.upbit.com/v1/candles/days';
     const params = new URLSearchParams({
-      market: 'KRW-BTC',
+      market: marketCode,
       count: Math.min(count, 200).toString() // 최대 200개까지 가능
     });
     
@@ -94,17 +100,18 @@ export async function getCandlesForDaily(count: number = 10): Promise<DailyCandl
 }
 
 /**
- * Get a list of weekly candlesticks for Bitcoin in KRW from Upbit API.
+ * Get a list of weekly candlesticks for Block Chain market like Bitcoin in KRW from Upbit API.
  * Get weekly candlestick data until today.
  * 
  * @param count 가져올 캔들 개수 (최대 200)
+ * @param marketCode 마켓 코드 (기본값: 'KRW-BTC')
  * @returns 캔들스틱 데이터 리스트
  */
-export async function getCandlesForWeekly(count: number = 10): Promise<WeeklyCandleStick[]> {
+export async function getCandlesForWeekly(count: number = 10, marketCode: string = 'KRW-BTC'): Promise<WeeklyCandleStick[]> {
   try {
     const url = 'https://api.upbit.com/v1/candles/weeks';
     const params = new URLSearchParams({
-      market: 'KRW-BTC',
+      market: marketCode,
       count: Math.min(count, 200).toString() // 최대 200개까지 가능
     });
     
@@ -119,5 +126,28 @@ export async function getCandlesForWeekly(count: number = 10): Promise<WeeklyCan
     return data.map(item => createWeeklyCandleFromDict(item));
   } catch (error) {
     throw new Error(`Failed to fetch weekly candles: ${error}`);
+  }
+}
+
+export async function getBlockChainMarkets(): Promise<Map<string, string>> {
+  try {
+    const response = await fetch('https://api.upbit.com/v1/market/all');
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json() as any[];
+    
+    const markets = new Map<string, string>();
+    for (const item of data) {
+      if (item.market.startsWith('KRW-')) {
+        markets.set(item.market, item.korean_name);
+      }
+    }
+    
+    return markets;
+  } catch (error) {
+    throw new Error(`Failed to fetch blockchain markets: ${error}`);
   }
 }
