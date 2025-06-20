@@ -1,6 +1,7 @@
+import traceback
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 import pandas as pd
 import numpy as np
 import asyncio
@@ -52,6 +53,7 @@ class AnalysisConfig:
 @dataclass
 class MarketData:
     """시장 데이터 컨테이너"""
+    market_code: str
     daily_df: pd.DataFrame
     minute_df: pd.DataFrame
     weekly_df: pd.DataFrame
@@ -101,7 +103,7 @@ def safe_dataclass_to_dataframe(data_list: List, dataclass_type=None) -> pd.Data
             logging.error(f"DataFrame 변환 완전 실패: {e2}")
             return pd.DataFrame()
 
-async def load_market_data(config: AnalysisConfig = None) -> MarketData:
+async def load_market_data(config: AnalysisConfig = None, market_code: str = 'KRW-BTC') -> MarketData:
     """
     시장 데이터 로드 (병렬 처리로 최적화)
     
@@ -115,13 +117,14 @@ async def load_market_data(config: AnalysisConfig = None) -> MarketData:
     start_time = datetime.now()
     
     # 병렬로 모든 데이터 로드 (핵심 최적화 포인트)
-    daily_task = get_candles_for_daily(count=config.daily_count)
+    daily_task = get_candles_for_daily(count=config.daily_count, market_code=market_code)
     minute_task = get_candles_for_minutes(
         minutes=config.minute_interval, 
-        count=config.minute_count
+        count=config.minute_count,
+        market_code=market_code
     )
-    weekly_task = get_candles_for_weekly(count=config.weekly_count)
-    ticker_task = get_current_ticker()
+    weekly_task = get_candles_for_weekly(count=config.weekly_count, market_code=market_code)
+    ticker_task = get_current_ticker(market_code=market_code)
     
     # 4개 API를 동시에 호출
     daily_candles, minute_candles, weekly_candles, ticker = await asyncio.gather(
@@ -137,6 +140,7 @@ async def load_market_data(config: AnalysisConfig = None) -> MarketData:
     logging.info(f"데이터 로드 완료: {load_time:.2f}초")
     
     return MarketData(
+        market_code=market_code,
         daily_df=daily_df,
         minute_df=minute_df,
         weekly_df=weekly_df,
@@ -155,10 +159,10 @@ def calculate_market_info(data: MarketData, config: AnalysisConfig) -> Dict[str,
         volatility = calculate_daily_volatility(data.daily_df)
         
         return {
-            "symbol": "BTC-KRW",
+            "symbol": data.market_code,
             "current_price": ticker.trade_price,
             "day_change_pct": round(ticker.signed_change_rate * 100, 2),
-            "timestamp": datetime.utcfromtimestamp(ticker.timestamp / 1000).strftime('%Y-%m-%dT%H:%M:%SZ'),
+            "timestamp": datetime.fromtimestamp(ticker.timestamp / 1000, timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
             "24h_volume": round(ticker.acc_trade_volume_24h, 2),
             "24h_volume_change_pct": volume_change_pct,
             "volatility_30d_annualized": volatility
@@ -166,7 +170,7 @@ def calculate_market_info(data: MarketData, config: AnalysisConfig) -> Dict[str,
     except Exception as e:
         logging.error(f"시장 정보 계산 실패: {e}")
         return {
-            "symbol": "BTC-KRW", "current_price": 0, "day_change_pct": 0.0,
+            "symbol": data.market_code, "current_price": 0, "day_change_pct": 0.0,
             "timestamp": datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'),
             "24h_volume": 0.0, "24h_volume_change_pct": 0.0, "volatility_30d_annualized": 0.0
         }
@@ -880,15 +884,15 @@ def empty_technical_signals() -> Dict[str, Any]:
     }
 
 # 메인 분석 함수 (기존 API 호환성 유지)
-async def analyze_btc_mareket(config: Optional[AnalysisConfig] = None) -> Dict[str, Any]:
+async def analyze_blockchain_mareket(config: Optional[AnalysisConfig] = None, market_code: str = 'KRW-BTC') -> Dict[str, Any]:
     """
-    비트코인 시장 종합 분석 함수 (Bitcoin Market Comprehensive Analysis)
+    블록체인 시장 종합 분석 함수 (BlockChain Market Comprehensive Analysis)
     
-    이 함수는 업비트 API를 통해 실시간 비트코인 데이터를 수집하고,
+    이 함수는 업비트 API를 통해 실시간 블로체인 시장 데이터를 수집하고,
     다양한 기술적 지표와 시장 분석을 수행하여 종합적인 투자 정보를 제공합니다.
     
     📊 **수집하는 데이터**:
-    - 실시간 비트코인 가격 및 거래량
+    - 실시간 블로체인 가격 및 거래량
     - 일봉 데이터 (최대 200개)
     - 30분봉 데이터 (최대 48개, 24시간)
     - 주봉 데이터 (최대 8개)
@@ -919,12 +923,13 @@ async def analyze_btc_mareket(config: Optional[AnalysisConfig] = None) -> Dict[s
         config (Optional[AnalysisConfig]): 분석 설정 파라미터
             - None인 경우 기본 설정 사용
             - 이동평균 기간, RSI 기간, MACD 설정 등을 커스터마이징 가능
-    
+        market_code (str): 분석할 마켓 코드 (기본값: 'KRW-BTC')
+            
     Returns:
         Dict[str, Any]: 종합 분석 결과
         {
             "market_info": {
-                "symbol": "BTC-KRW",
+                "symbol": str,               # 마켓 코드 (예: "KRW-BTC")
                 "current_price": float,      # 현재 가격
                 "day_change_pct": float,     # 일일 변화율(%)
                 "timestamp": str,            # 마지막 업데이트 시간
@@ -959,13 +964,13 @@ async def analyze_btc_mareket(config: Optional[AnalysisConfig] = None) -> Dict[s
     
     Examples:
         >>> # 기본 설정으로 분석
-        >>> result = await analyze_btc_mareket()
+        >>> result = await analyze_blockchain_mareket()
         >>> print(f"현재 가격: {result['market_info']['current_price']:,}원")
         >>> print(f"단기 추세: {result['trend_analysis']['short_term']}")
         
         >>> # 커스텀 설정으로 분석
         >>> custom_config = AnalysisConfig(ma_short=10, ma_long=100)
-        >>> result = await analyze_btc_mareket(custom_config)
+        >>> result = await analyze_blockchain_mareket(custom_config)
     
     Performance:
         - 병렬 API 호출로 최적화됨 (기존 4번 → 1번 병렬 호출)
@@ -984,9 +989,9 @@ async def analyze_btc_mareket(config: Optional[AnalysisConfig] = None) -> Dict[s
         start_time = datetime.now()
         
         # 1. 데이터 로드 (병렬 처리)
-        market_data = await load_market_data(config)
+        market_data = await load_market_data(config, market_code)
         
-        logging.info(f"로드된 데이터: Daily={len(market_data.daily_df)}, Minute={len(market_data.minute_df)}, Weekly={len(market_data.weekly_df)}")
+        logging.info(f"로드된 데이터: {market_code} Daily={len(market_data.daily_df)}, Minute={len(market_data.minute_df)}, Weekly={len(market_data.weekly_df)}")
         
         # 2. 모든 분석을 병렬로 실행
         market_info_task = asyncio.create_task(
@@ -1017,6 +1022,7 @@ async def analyze_btc_mareket(config: Optional[AnalysisConfig] = None) -> Dict[s
         }
         
     except Exception as e:
+        traceback.print_exc()
         logging.error(f"시장 분석 실패: {e}")
         raise
 
@@ -1029,8 +1035,8 @@ def set_tools(mcp):
         mcp: FastMCP instance
     """
     mcp.add_tool(
-        analyze_btc_mareket,
-        "analyze_btc_mareket_py",
-        description="비트코인 시장 정보를 수집하고, \
+        analyze_blockchain_mareket,
+        "analyze_blockchain_mareket",
+        description="특정 블록체인 시장 정보를 수집하고, \
             추세 분석 및 가격 레벨을 계산하여 종합적인 분석 결과를 반환합니다."
     )

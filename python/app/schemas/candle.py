@@ -1,5 +1,24 @@
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any, Union
+
+def safe_float(value: Any, default: float = 0.0) -> float:
+    """None이나 빈 값을 안전하게 float로 변환"""
+    if value is None or value == '':
+        return default
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return default
+
+def safe_int(value: Any, default: int = 0) -> int:
+    """None이나 빈 값을 안전하게 int로 변환"""
+    if value is None or value == '':
+        return default
+    try:
+        return int(value)
+    except (ValueError, TypeError):
+        return default
 
 @dataclass
 class MinuteCandleStick:
@@ -21,14 +40,14 @@ class MinuteCandleStick:
             market=data.get('market', ''),
             candle_date_time_utc=data.get('candle_date_time_utc', ''),
             candle_date_time_kst=data.get('candle_date_time_kst', ''),
-            opening_price=float(data.get('opening_price', 0)),
-            high_price=float(data.get('high_price', 0)),
-            low_price=float(data.get('low_price', 0)),
-            trade_price=float(data.get('trade_price', 0)),
-            timestamp=int(data.get('timestamp', 0)),
-            candle_acc_trade_price=float(data.get('candle_acc_trade_price', 0)),
-            candle_acc_trade_volume=float(data.get('candle_acc_trade_volume', 0)),
-            unit=int(data.get('unit', 1))
+            opening_price=safe_float(data.get('opening_price')),
+            high_price=safe_float(data.get('high_price')),
+            low_price=safe_float(data.get('low_price')),
+            trade_price=safe_float(data.get('trade_price')),
+            timestamp=safe_int(data.get('timestamp')),
+            candle_acc_trade_price=safe_float(data.get('candle_acc_trade_price')),
+            candle_acc_trade_volume=safe_float(data.get('candle_acc_trade_volume')),
+            unit=safe_int(data.get('unit'), 1)
         )
 
     def get_utc_datetime(self) -> datetime:
@@ -61,16 +80,16 @@ class DailyCandleStick:
             market=data.get('market', ''),
             candle_date_time_utc=data.get('candle_date_time_utc', ''),
             candle_date_time_kst=data.get('candle_date_time_kst', ''),
-            opening_price=float(data.get('opening_price', 0)),
-            high_price=float(data.get('high_price', 0)),
-            low_price=float(data.get('low_price', 0)),
-            trade_price=float(data.get('trade_price', 0)),
-            timestamp=int(data.get('timestamp', 0)),
-            candle_acc_trade_price=float(data.get('candle_acc_trade_price', 0)),
-            candle_acc_trade_volume=float(data.get('candle_acc_trade_volume', 0)),
-            prev_closing_price=float(data.get('prev_closing_price', 0)),
-            change_price=float(data.get('change_price', 0)),
-            change_rate=float(data.get('change_rate', 0))
+            opening_price=safe_float(data.get('opening_price')),
+            high_price=safe_float(data.get('high_price')),
+            low_price=safe_float(data.get('low_price')),
+            trade_price=safe_float(data.get('trade_price')),
+            timestamp=safe_int(data.get('timestamp')),
+            candle_acc_trade_price=safe_float(data.get('candle_acc_trade_price')),
+            candle_acc_trade_volume=safe_float(data.get('candle_acc_trade_volume')),
+            prev_closing_price=safe_float(data.get('prev_closing_price')),
+            change_price=safe_float(data.get('change_price')),
+            change_rate=safe_float(data.get('change_rate'))
         )
 
     def get_utc_datetime(self) -> datetime:
@@ -101,13 +120,13 @@ class WeeklyCandleStick:
             market=data.get('market', ''),
             candle_date_time_utc=data.get('candle_date_time_utc', ''),
             candle_date_time_kst=data.get('candle_date_time_kst', ''),
-            opening_price=float(data.get('opening_price', 0)),
-            high_price=float(data.get('high_price', 0)),
-            low_price=float(data.get('low_price', 0)),
-            trade_price=float(data.get('trade_price', 0)),
-            timestamp=int(data.get('timestamp', 0)),
-            candle_acc_trade_price=float(data.get('candle_acc_trade_price', 0)),
-            candle_acc_trade_volume=float(data.get('candle_acc_trade_volume', 0)),
+            opening_price=safe_float(data.get('opening_price')),
+            high_price=safe_float(data.get('high_price')),
+            low_price=safe_float(data.get('low_price')),
+            trade_price=safe_float(data.get('trade_price')),
+            timestamp=safe_int(data.get('timestamp')),
+            candle_acc_trade_price=safe_float(data.get('candle_acc_trade_price')),
+            candle_acc_trade_volume=safe_float(data.get('candle_acc_trade_volume')),
             first_day_of_period=data.get('first_day_of_period', '')
         )
 

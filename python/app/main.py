@@ -1,9 +1,10 @@
+import asyncio
 import os
 from mcp.server.fastmcp import FastMCP
 from dotenv import load_dotenv
 
 from app.tools.market import set_tools as set_upbit_tools
-from app.tools.analyze import set_tools as set_analyze_tools
+from app.tools.analyze import set_tools as set_analyze_tools, analyze_blockchain_mareket
 
 # load .env file
 load_dotenv()
@@ -13,9 +14,10 @@ set_upbit_tools(mcp)
 set_analyze_tools(mcp)
 
 if __name__ == "__main__":
-    mode = os.getenv("MODE", "stdio")
+    asyncio.run(analyze_blockchain_mareket(market_code="KRW-ETH"))
+    # mode = os.getenv("MODE", "stdio")
 
-    if mode == "stdio":
-        mcp.run(transport="stdio")
-    else:
-        mcp.run(transport="streamable-http")
+    # if mode == "stdio":
+    #     mcp.run(transport="stdio")
+    # else:
+    #     mcp.run(transport="streamable-http")
