@@ -129,7 +129,7 @@ export async function getCandlesForWeekly(count: number = 10, marketCode: string
   }
 }
 
-export async function getBlockChainMarkets(): Promise<Map<string, string>> {
+export async function getBlockChainMarkets(): Promise<Array<Map<string, string>>> {
   try {
     const response = await fetch('https://api.upbit.com/v1/market/all');
     
@@ -139,10 +139,14 @@ export async function getBlockChainMarkets(): Promise<Map<string, string>> {
     
     const data = await response.json() as any[];
     
-    const markets = new Map<string, string>();
+    const markets = new Array<Map<string, string>>();
     for (const item of data) {
       if (item.market.startsWith('KRW-')) {
-        markets.set(item.market, item.korean_name);
+        const market = new Map<string, string>();
+        market.set('market', item.market);
+        market.set('korean_name', item.korean_name);
+        market.set('english_name', item.english_name);
+        markets.push(market);
       }
     }
     

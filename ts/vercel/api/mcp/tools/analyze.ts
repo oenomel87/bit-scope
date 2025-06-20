@@ -388,10 +388,10 @@ export async function loadMarketData(config: AnalysisConfig = DEFAULT_CONFIG, ma
   
   // 병렬로 모든 데이터 로드
   const [dailyData, minuteData, weeklyData, ticker] = await Promise.all([
-    getCandlesForDaily(config.dailyCount),
-    getCandlesForMinutes(config.minuteInterval, config.minuteCount),
-    getCandlesForWeekly(config.weeklyCount),
-    getCurrentTicker()
+    getCandlesForDaily(config.dailyCount, marketCode),
+    getCandlesForMinutes(config.minuteInterval, config.minuteCount, marketCode),
+    getCandlesForWeekly(config.weeklyCount, marketCode),
+    getCurrentTicker(marketCode)
   ]);
   
   // 시간순 정렬 (과거 → 현재)
